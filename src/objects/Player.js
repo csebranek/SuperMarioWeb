@@ -33,6 +33,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             writable: true,
             value: void 0
         });
+        // WASD aliases for movement.
+        Object.defineProperty(this, "wKey", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "aKey", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "dKey", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         Object.defineProperty(this, "size", {
             enumerable: true,
             configurable: true,
@@ -105,14 +124,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.cursors = kb.createCursorKeys();
         this.jumpKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.fireKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+        this.wKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.aKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.dKey = kb.addKey(Phaser.Input.Keyboard.KeyCodes.D);
     }
     tick(time, deltaMs) {
         if (!this.alive)
             return;
         const body = this.body;
         // Horizontal movement.
-        const left = this.cursors.left?.isDown;
-        const right = this.cursors.right?.isDown;
+        const left = this.cursors.left?.isDown || this.aKey.isDown;
+        const right = this.cursors.right?.isDown || this.dKey.isDown;
         if (left && !right) {
             body.setAccelerationX(-PLAYER.acceleration);
             this.setFlipX(true);
@@ -127,8 +149,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             body.setAccelerationX(0);
         }
         // Jumping.
-        const jumpDown = this.jumpKey.isDown || this.cursors.up?.isDown || this.cursors.space?.isDown;
+        const jumpDown = this.jumpKey.isDown || this.cursors.up?.isDown || this.cursors.space?.isDown || this.wKey.isDown;
         const jumpJustDown = Phaser.Input.Keyboard.JustDown(this.jumpKey) ||
+            Phaser.Input.Keyboard.JustDown(this.wKey) ||
             (this.cursors.up ? Phaser.Input.Keyboard.JustDown(this.cursors.up) : false);
         if (jumpJustDown && body.blocked.down) {
             body.setVelocityY(-PLAYER.jumpVelocity);

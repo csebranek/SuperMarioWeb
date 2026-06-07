@@ -40,7 +40,7 @@ export class UIScene extends Phaser.Scene {
         })
             .setScrollFactor(0);
         this.add
-            .text(16, this.scale.height - 28, '← → move    SPACE / ↑ jump    [ F ] shoot fireball (Fire form only)', {
+            .text(16, this.scale.height - 28, '←→ / A D move    SPACE / ↑ / W jump    [ F ] shoot fireball (Fire form only)', {
             fontFamily: 'monospace',
             fontSize: '13px',
             color: '#ffffff',

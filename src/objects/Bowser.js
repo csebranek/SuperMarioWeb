@@ -85,7 +85,11 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
         body.setMaxVelocity(BOSS.paceSpeed, 800);
         body.setVelocityX(BOSS.paceSpeed * this.dir);
         body.setDragX(0);
-        body.setImmovable(true); // we'll handle damage manually, not knockback
+        // NOTE: do NOT setImmovable(true) — in Arcade Physics, two immovable
+        // bodies can't separate, so an immovable Bowser would fall straight
+        // through the (also-immovable) static ground tiles. `pushable = false`
+        // is what we actually want: the player can't shove him around, but he
+        // still resolves collisions with the ground.
         body.pushable = false;
         this.nextAttackAt = scene.time.now + 1200;
         this.nextShockwaveAt = scene.time.now + 3000;
