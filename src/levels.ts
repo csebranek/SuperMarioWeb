@@ -47,8 +47,8 @@ export const LEVELS: LevelData[] = [
       { col: 40, row: 11 }, { col: 41, row: 11 }, { col: 43, row: 11 }, { col: 44, row: 11 }
     ],
     qBlocks: [
-      { col: 42, row: 11, contents: 'mushroom' },
-      { col: 50, row: 11, contents: 'coin' }
+      { col: 42, row: 9, contents: 'mushroom' },
+      { col: 50, row: 9, contents: 'coin' }
     ],
     coins: [
       { col: 5, row: 13 }, { col: 8, row: 13 }, { col: 12, row: 13 },
@@ -57,7 +57,6 @@ export const LEVELS: LevelData[] = [
     goombas: [25, 45, 55, 75],
     koopas: [],
     fireFlowers: [{ col: 15, row: 13 }],
-    bowser: { col: 38 },
     flagCol: 95,
     playerStart: { col: 2, row: 14 }
   },
@@ -77,8 +76,8 @@ export const LEVELS: LevelData[] = [
       { col: 48, row: 11 }, { col: 49, row: 11 }, { col: 50, row: 11 }
     ],
     qBlocks: [
-      { col: 15, row: 9, contents: 'mushroom' },
-      { col: 49, row: 9, contents: 'coin' }
+      { col: 15, row: 7, contents: 'mushroom' },
+      { col: 49, row: 7, contents: 'coin' }
     ],
     coins: [
       { col: 10, row: 13 }, { col: 27, row: 13 }, { col: 45, row: 13 },
@@ -102,8 +101,8 @@ export const LEVELS: LevelData[] = [
       { col: 55, row: 11 }, { col: 56, row: 11 }
     ],
     qBlocks: [
-      { col: 18, row: 11, contents: 'mushroom' },
-      { col: 40, row: 11, contents: 'coin' }
+      { col: 18, row: 9, contents: 'mushroom' },
+      { col: 40, row: 9, contents: 'coin' }
     ],
     coins: [
       { col: 5, row: 13 }, { col: 9, row: 13 }, { col: 14, row: 13 },
@@ -140,8 +139,8 @@ export const LEVELS: LevelData[] = [
       { col: 60, row: 10 }, { col: 61, row: 10 }, { col: 62, row: 10 }, { col: 63, row: 10 }
     ],
     qBlocks: [
-      { col: 50, row: 11, contents: 'mushroom' },
-      { col: 75, row: 11, contents: 'coin' }
+      { col: 50, row: 9, contents: 'mushroom' },
+      { col: 75, row: 9, contents: 'coin' }
     ],
     coins: [
       { col: 33, row: 10 }, { col: 40, row: 10 },
@@ -313,9 +312,9 @@ export const LEVELS: LevelData[] = [
       { col: 70, row: 11 }, { col: 71, row: 11 }, { col: 72, row: 11 }
     ],
     qBlocks: [
-      { col: 13, row: 9, contents: 'mushroom' },
-      { col: 41, row: 9, contents: 'coin' },
-      { col: 71, row: 9, contents: 'coin' }
+      { col: 13, row: 7, contents: 'mushroom' },
+      { col: 41, row: 7, contents: 'coin' },
+      { col: 71, row: 7, contents: 'coin' }
     ],
     coins: [
       { col: 10, row: 13 }, { col: 25, row: 13 }, { col: 50, row: 13 },

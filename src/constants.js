@@ -37,16 +37,21 @@ export const ARMOR = {
     coinThreshold: 15
 };
 export const BOSS = {
-    hp: 20,
+    hp: 10,
     paceSpeed: 80,
     paceRangeTiles: 8,
     attackIntervalMs: 1800,
+    // AOE fires every 5–7 seconds (randomised in Bowser.tick).
+    shockwaveMinMs: 5000,
+    shockwaveMaxMs: 7000,
+    // 4 tiles = 128px trigger range; damage range slightly smaller.
     shockwaveRange: 130,
     shockwaveDamageRange: 110,
     shockwaveTelegraphMs: 600,
     bigFireSpeedX: 220,
     bigFireJumpVy: -380,
-    invulnAfterHitMs: 250,
+    // 600ms invuln per hit — ensures one fireball can never trigger twice.
+    invulnAfterHitMs: 600,
     jumpIntervalMs: 2200,
     jumpVy: -650
 };

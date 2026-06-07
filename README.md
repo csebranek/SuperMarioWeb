@@ -1,6 +1,27 @@
 # Super Mario Web — Build & Deploy
 
-Very short steps to build and deploy to an Apache site at `/super-mario`.
+Very short guide for running locally and deploying to an Apache site at `/super-mario`.
+
+Local development
+
+- Install and run the dev server (Vite). Opens at `http://localhost:5173` by default.
+
+```bash
+npm install
+npm run dev
+# open http://localhost:5173
+```
+
+- Preview the production build locally (build then preview):
+
+```bash
+npm install
+npm run build
+npm run preview
+# open the printed preview URL (usually http://localhost:5173)
+```
+
+Production build & deploy
 
 1. Install deps and build:
 
@@ -27,3 +48,31 @@ Notes:
 
 Troubleshooting:
 - If you see 404s after a deploy, force a hard reload in the browser (Shift+Reload) or clear cache — browsers may have cached an older `index.html` with absolute paths.
+
+Quick deploy & requirements:
+
+- **Node**: this project requires Node >= 20.19.0 (or Node >= 22.12.0). Verify with:
+
+```bash
+node -v
+npm -v
+```
+
+- Build and deploy using the included script `scripts/deploy.sh` (it copies `dist` to `/var/www/html/super-mario`):
+
+```bash
+npm install
+npm run build
+chmod +x scripts/deploy.sh   # make executable if needed
+bash scripts/deploy.sh       # or ./scripts/deploy.sh
+```
+
+- The deploy script targets `/var/www/html/super-mario` by default — edit the script if your Apache document root or permissions differ.
+
+After making code changes
+
+- When you edit source files, rebuild the production bundle before deploying or running `npm run preview` so your changes are included in `dist/`:
+
+```bash
+npm run build
+```

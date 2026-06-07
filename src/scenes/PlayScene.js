@@ -84,6 +84,12 @@ export class PlayScene extends Phaser.Scene {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "onPole", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: false
+        });
         Object.defineProperty(this, "score", {
             enumerable: true,
             configurable: true,
@@ -155,6 +161,10 @@ export class PlayScene extends Phaser.Scene {
         if (!this.scene.isActive('UIScene'))
             this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');
+        // Announce boss approach on level 3 (index 2).
+        if (this.levelIndex === 2) {
+            this.showToast('BOWSER APPROACHES!', 3200);
+        }
     }
     buildLevel() {
         for (const span of this.level.groundSpans) {
@@ -246,7 +256,17 @@ export class PlayScene extends Phaser.Scene {
             }
         });
         this.physics.add.overlap(this.player, this.goombas, (_p, gObj) => this.handlePlayerEnemy(gObj));
-        this.physics.add.overlap(this.player, this.koopas, (_p, kObj) => this.handlePlayerKoopa(kObj));
+        this.physics.add.overlap(this.player, this.koopas, (_p, kObj) => {
+            const k = kObj;
+            if (!this.player.alive)
+                return;
+            // Stationary shell — kick it, no damage.
+            if (k.state === 'shell') {
+                k.kick(this.player.x);
+                return;
+            }
+            this.handlePlayerKoopa(k);
+        });
         this.physics.add.overlap(this.player, this.coins, (_p, coin) => {
             coin.destroy();
             this.coinsCollected += 1;
@@ -285,11 +305,15 @@ export class PlayScene extends Phaser.Scene {
             this.addScore(150);
         });
         // Fireball vs Bowser.
+        // IMPORTANT: Bowser (sprite) must be arg1, fireballs (group) must be arg2.
+        // When a group is arg1, Phaser internally swaps to collideSpriteVsGroup(sprite, group)
+        // and the callback receives (sprite, groupMember) — i.e. (bowser, fireball).
+        // Putting Bowser first keeps that ordering explicit and correct.
         if (this.bowser) {
-            this.physics.add.overlap(this.fireballs, this.bowser, (fb) => {
-                const b = this.bowser;
+            this.physics.add.overlap(this.bowser, this.fireballs, (_bowserObj, fbObj) => {
+                const fb = fbObj;
                 fb.destroy();
-                if (b.hit(this.time.now)) {
+                if (this.bowser.hit()) {
                     this.addScore(5000);
                     this.completeLevel();
                 }
@@ -297,8 +321,8 @@ export class PlayScene extends Phaser.Scene {
                     this.addScore(100);
                     this.pushHud();
                 }
-            });
-            // Stomping Bowser also counts as one hit (and bounces the player).
+            }, (_bowserObj, fbObj) => fbObj.active && !!this.bowser && this.bowser.alive);
+            // Stomping Bowser counts as one hit.
             this.physics.add.overlap(this.player, this.bowser, (_p, bObj) => {
                 const b = bObj;
                 if (!b.alive || !this.player.alive)
@@ -306,7 +330,7 @@ export class PlayScene extends Phaser.Scene {
                 const pBody = this.player.body;
                 if (pBody.velocity.y > 0 && this.player.y < b.y - 16) {
                     this.player.bounce();
-                    if (b.hit(this.time.now)) {
+                    if (b.hit()) {
                         this.addScore(5000);
                         this.completeLevel();
                     }
@@ -324,7 +348,43 @@ export class PlayScene extends Phaser.Scene {
             bfb.destroy();
             this.damagePlayer();
         });
-        this.physics.add.overlap(this.player, this.flag, () => this.completeLevel());
+        this.physics.add.overlap(this.player, this.flag, () => this.startPoleSequence());
+    }
+    startPoleSequence() {
+        if (this.levelCleared)
+            return;
+        if (this.bowser && this.bowser.alive)
+            return;
+        if (this.onPole)
+            return;
+        this.onPole = true;
+        const body = this.player.body;
+        // Freeze horizontal movement and gravity, snap to pole x (slight offset)
+        body.setVelocity(0, 0);
+        body.setAccelerationX(0);
+        body.setAllowGravity(false);
+        // Position player at pole (slightly to the left so sprite overlaps nicely)
+        this.player.x = this.flag.x - 8;
+        // Slide down to just above the ground (row 14 is ground surface center)
+        const groundPos = tileCenter(this.level.flagCol, 14);
+        const targetY = groundPos.y;
+        const startY = this.player.y;
+        const dist = Math.max(8, targetY - startY);
+        const duration = Math.max(400, dist * 6);
+        this.tweens.add({
+            targets: this.player,
+            y: targetY,
+            duration,
+            ease: 'Linear',
+            onComplete: () => {
+                // restore physics and complete level
+                body.setAllowGravity(true);
+                // make sure player is positioned at base of pole
+                this.player.x = this.flag.x - 8;
+                this.onPole = false;
+                this.completeLevel();
+            }
+        });
     }
     bumpQuestionBlock(tile, data) {
         if (data.type !== 'q')
@@ -364,16 +424,27 @@ export class PlayScene extends Phaser.Scene {
     triggerShockwave(x, y) {
         if (!this.player.alive)
             return;
-        // Visual.
-        const ring = this.add.image(x, y, 'shockwave').setScale(0.2).setAlpha(0.9);
-        this.tweens.add({
-            targets: ring,
-            scale: 1.1,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => ring.destroy()
-        });
-        // Damage check by distance.
+        // Draw expanding fire-ring AOE — three concentric circles that grow outward.
+        const RANGE = BOSS.shockwaveRange;
+        for (let i = 0; i < 3; i++) {
+            const delay = i * 120;
+            this.time.delayedCall(delay, () => {
+                const ring = this.add
+                    .circle(x, y, 12, 0xff4400, 0.85)
+                    .setStrokeStyle(4, 0xffaa00)
+                    .setScrollFactor(1);
+                this.tweens.add({
+                    targets: ring,
+                    scaleX: (RANGE * 2) / 12,
+                    scaleY: (RANGE * 2) / 12,
+                    alpha: 0,
+                    duration: 700 - delay,
+                    ease: 'Quad.Out',
+                    onComplete: () => ring.destroy()
+                });
+            });
+        }
+        // Check if player is inside the blast radius.
         const dx = this.player.x - x;
         const dy = this.player.y - y;
         if (Math.hypot(dx, dy) < BOSS.shockwaveDamageRange) {

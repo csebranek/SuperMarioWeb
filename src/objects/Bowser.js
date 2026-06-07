@@ -1,17 +1,8 @@
 import Phaser from 'phaser';
 import { BOSS } from '../constants';
 import { BigFireball } from './BigFireball';
-/**
- * Bowser boss. Paces a horizontal range, throws BigFireballs on a cooldown,
- * and emits an AOE shockwave when the player gets close. Takes `BOSS.hp`
- * fireball hits or a stomp from above (each stomp = 1 HP, fireball = 1 HP)
- * before dying and clearing the level.
- *
- * Public API used by PlayScene:
- *   - tick(now, playerX, playerY)
- *   - hit(now): returns true if the boss died from this hit
- *   - alive
- */
+/** Bowser boss. Paces back and forth, throws BigFireballs.
+ *  Requires BOSS.hp fireball hits (or stomps) to defeat. */
 export class Bowser extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, bigFireballs, onShockwave) {
         super(scene, x, y, 'bowser');
@@ -57,12 +48,6 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
             writable: true,
             value: 0
         });
-        Object.defineProperty(this, "invulnUntil", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
         Object.defineProperty(this, "bigFireballs", {
             enumerable: true,
             configurable: true,
@@ -92,13 +77,20 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
         // still resolves collisions with the ground.
         body.pushable = false;
         this.nextAttackAt = scene.time.now + 1200;
-        this.nextShockwaveAt = scene.time.now + 3000;
+        // First shockwave fires after 5–7 seconds.
+        const swRange = BOSS.shockwaveMaxMs - BOSS.shockwaveMinMs;
+        this.nextShockwaveAt = scene.time.now + BOSS.shockwaveMinMs + Math.random() * swRange;
         this.nextJumpAt = scene.time.now + 1500;
     }
     tick(now, playerX, playerY) {
         if (!this.alive)
             return;
         const body = this.body;
+        // If the physics body has been removed (object destroyed or detached),
+        // bail out to avoid runtime errors while the scene update loop still
+        // references this object for a short time.
+        if (!body)
+            return;
         // Pace within ±paceRangeTiles of home.
         const range = BOSS.paceRangeTiles * 32;
         if (this.x < this.homeX - range)
@@ -128,35 +120,33 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
             fbBody.setVelocity(BOSS.bigFireSpeedX * aim, BOSS.bigFireJumpVy);
             fbBody.setAllowGravity(true);
         }
-        // Shockwave AOE when player is close.
-        const dx = playerX - this.x;
-        const dy = playerY - this.y;
-        const dist = Math.hypot(dx, dy);
-        if (now >= this.nextShockwaveAt && dist < BOSS.shockwaveRange) {
-            this.nextShockwaveAt = now + 3500;
-            this.scene.time.delayedCall(BOSS.shockwaveTelegraphMs, () => {
+        // Shockwave AOE — fires every 5–7 seconds regardless of player distance;
+        // PlayScene.triggerShockwave handles the distance/damage check.
+        if (now >= this.nextShockwaveAt) {
+            // Randomise next interval between shockwaveMinMs and shockwaveMaxMs.
+            const range = BOSS.shockwaveMaxMs - BOSS.shockwaveMinMs;
+            this.nextShockwaveAt = now + BOSS.shockwaveMinMs + Math.random() * range;
+            // Telegraph: Bowser flashes before the AOE hits.
+            this.scene?.tweens?.add({
+                targets: this,
+                alpha: 0.4,
+                duration: 120,
+                yoyo: true,
+                repeat: 3,
+            });
+            this.scene?.time?.delayedCall(BOSS.shockwaveTelegraphMs, () => {
                 if (this.alive)
                     this.onShockwave(this.x, this.y);
             });
-            // Telegraph flash.
-            this.scene.tweens.add({
-                targets: this,
-                alpha: 0.5,
-                duration: 100,
-                yoyo: true,
-                repeat: 2
-            });
         }
     }
-    /** Returns true if this hit killed Bowser. */
-    hit(now) {
+    /** Deduct one HP. Returns true when Bowser is defeated. */
+    hit() {
         if (!this.alive)
             return false;
-        if (now < this.invulnUntil)
-            return false;
-        this.invulnUntil = now + BOSS.invulnAfterHitMs;
         this.hp -= 1;
-        this.scene.tweens.add({
+        // Flash red on every hit — guard scene in case callback fires during teardown.
+        this.scene?.tweens?.add({
             targets: this,
             tint: { from: 0xffffff, to: 0xff0000 },
             duration: 80,
@@ -166,10 +156,12 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
         if (this.hp <= 0) {
             this.alive = false;
             const body = this.body;
-            body.setVelocity(0, -400);
-            body.checkCollision.none = true;
+            if (body) {
+                body.setVelocity(0, -300);
+                body.checkCollision.none = true;
+            }
             this.setTint(0x444444);
-            this.scene.time.delayedCall(1200, () => this.destroy());
+            this.scene?.time?.delayedCall(800, () => this.destroy());
             return true;
         }
         return false;
