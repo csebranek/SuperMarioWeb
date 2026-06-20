@@ -42,7 +42,31 @@ export const FIRE = {
 } as const;
 
 export const ARMOR = {
-  coinThreshold: 15
+  coinThreshold: 10
+} as const;
+
+export const WARIO = {
+  hp: 14,
+  paceSpeed: 90,
+  paceRangeTiles: 7,
+  // Throw attack alternates knife <-> bomb on this interval.
+  throwIntervalMs: 1600,
+  knifeSpeed: 320,
+  knifeLifetimeMs: 4000,
+  bombSpeedX: 200,
+  bombJumpVy: -430,
+  // Lasso reels the player in when within horizontal range.
+  lassoIntervalMs: 6500,
+  lassoRange: 340,
+  lassoPullMs: 420,
+  // Standalone AOE shockwave centered on Wario.
+  aoeIntervalMs: 8000,
+  aoeRange: 150,
+  aoeDamageRange: 125,
+  aoeTelegraphMs: 600,
+  invulnAfterHitMs: 600,
+  jumpIntervalMs: 2600,
+  jumpVy: -600
 } as const;
 
 export const BOSS = {
@@ -92,5 +116,16 @@ export const COLORS = {
   shockwave: 0xff8a00,
   armor: 0x8ad6ff,
   flag: 0xffffff,
-  pole: 0xeeeeee
+  pole: 0xeeeeee,
+  warioCap: 0xf2d11a,
+  warioShirt: 0xf2d11a,
+  warioOveralls: 0x6a2db5,
+  warioSkin: 0xffd9b0,
+  warioMustache: 0x3a2410,
+  warioEmblem: 0x1f5fd6,
+  knife: 0xd7dde6,
+  knifeHandle: 0x5a3a1a,
+  bomb: 0x1b1b1b,
+  bombFuse: 0xffb347,
+  lasso: 0xb9762f
 } as const;

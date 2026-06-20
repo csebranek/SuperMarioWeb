@@ -226,12 +226,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     } else if (next === 'big') {
       this.setTexture('player-big');
       const body = this.body as Phaser.Physics.Arcade.Body;
-      body.setSize(18, 42).setOffset(2, 2);
+      // Body is one tile shorter than the 44px sprite so a big/fire player
+      // can fit through 1-tile gaps below blocks. The head sticks out of the
+      // hitbox (no collision) but feet stay planted at the sprite bottom.
+      body.setSize(18, 30).setOffset(2, 14);
       if (!wasBig) this.y -= 16;
     } else if (next === 'fire') {
       this.setTexture('player-fire');
       const body = this.body as Phaser.Physics.Arcade.Body;
-      body.setSize(18, 42).setOffset(2, 2);
+      body.setSize(18, 30).setOffset(2, 14);
       if (!wasBig) this.y -= 16;
     }
   }

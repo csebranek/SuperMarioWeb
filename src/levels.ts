@@ -15,7 +15,8 @@ export interface LevelData {
   goombas: number[];
   koopas: number[];
   fireFlowers?: Tile[];
-  bowser?: { col: number };
+  bowser?: { col: number; hp?: number };
+  wario?: { col: number; hp?: number };
   flagCol: number;
   playerStart: { col: number; row: number };
 }
@@ -56,7 +57,8 @@ export const LEVELS: LevelData[] = [
     ],
     goombas: [25, 45, 55, 75],
     koopas: [],
-    fireFlowers: [{ col: 15, row: 13 }],
+    fireFlowers: [{ col: 15, row: 14 }],
+    wario: { col: 82 },
     flagCol: 95,
     playerStart: { col: 2, row: 14 }
   },
@@ -361,8 +363,149 @@ export const LEVELS: LevelData[] = [
     goombas: [8, 18, 30, 45, 58, 68, 82],
     koopas: [20, 48, 72],
     fireFlowers: [{ col: 53, row: 9 }],
-    bowser: { col: 90 },
+    bowser: { col: 90, hp: 20 },
     flagCol: 97,
+    playerStart: { col: 2, row: 14 }
+  },
+
+  // 12 — goomba gauntlet over a broken causeway.
+  {
+    name: '2-1 Goomba Gauntlet',
+    groundSpans: [
+      { start: 0, end: 16 },
+      { start: 20, end: 30 },
+      { start: 34, end: 48 },
+      { start: 52, end: 66 },
+      { start: 70, end: W }
+    ],
+    pipes: [{ col: 24, height: 2 }, { col: 58, height: 3 }],
+    bricks: [
+      { col: 12, row: 11 }, { col: 13, row: 11 },
+      { col: 38, row: 10 }, { col: 39, row: 10 }, { col: 40, row: 10 },
+      { col: 60, row: 11 }, { col: 61, row: 11 },
+      { col: 80, row: 9 }, { col: 81, row: 9 }, { col: 82, row: 9 }
+    ],
+    qBlocks: [
+      { col: 13, row: 8, contents: 'mushroom' },
+      { col: 39, row: 7, contents: 'coin' },
+      { col: 81, row: 6, contents: 'coin' }
+    ],
+    coins: [
+      { col: 6, row: 13 }, { col: 22, row: 13 }, { col: 27, row: 13 },
+      { col: 44, row: 13 }, { col: 55, row: 13 }, { col: 74, row: 13 },
+      { col: 85, row: 13 }, { col: 90, row: 13 }
+    ],
+    goombas: [10, 14, 22, 27, 36, 40, 44, 55, 62, 74, 82, 90],
+    koopas: [30, 64],
+    fireFlowers: [{ col: 8, row: 14 }],
+    flagCol: 96,
+    playerStart: { col: 2, row: 14 }
+  },
+
+  // 13 — koopa caverns: shells everywhere, low brick ceilings.
+  {
+    name: '2-2 Koopa Caverns',
+    groundSpans: [{ start: 0, end: W }],
+    pipes: [
+      { col: 16, height: 3 }, { col: 28, height: 4 },
+      { col: 44, height: 2 }, { col: 58, height: 4 }, { col: 74, height: 3 }
+    ],
+    bricks: [
+      { col: 20, row: 9 }, { col: 21, row: 9 }, { col: 22, row: 9 }, { col: 23, row: 9 },
+      { col: 36, row: 10 }, { col: 37, row: 10 }, { col: 38, row: 10 },
+      { col: 50, row: 9 }, { col: 51, row: 9 }, { col: 52, row: 9 },
+      { col: 66, row: 10 }, { col: 67, row: 10 }, { col: 68, row: 10 },
+      { col: 84, row: 9 }, { col: 85, row: 9 }, { col: 86, row: 9 }
+    ],
+    qBlocks: [
+      { col: 22, row: 6, contents: 'mushroom' },
+      { col: 51, row: 6, contents: 'coin' },
+      { col: 85, row: 6, contents: 'coin' }
+    ],
+    coins: [
+      { col: 10, row: 13 }, { col: 32, row: 13 }, { col: 48, row: 13 },
+      { col: 62, row: 13 }, { col: 80, row: 13 }, { col: 92, row: 13 }
+    ],
+    goombas: [40, 70, 90],
+    koopas: [8, 14, 26, 34, 42, 54, 62, 72, 82, 94],
+    fireFlowers: [{ col: 5, row: 14 }],
+    flagCol: 96,
+    playerStart: { col: 2, row: 14 }
+  },
+
+  // 14 — sky fortress: floating platforms over a deep pit gauntlet.
+  {
+    name: '2-3 Sky Fortress',
+    groundSpans: [
+      { start: 0, end: 10 },
+      { start: 15, end: 21 },
+      { start: 26, end: 32 },
+      { start: 40, end: 48 },
+      { start: 54, end: 60 },
+      { start: 66, end: 74 },
+      { start: 80, end: W }
+    ],
+    pipes: [{ col: 44, height: 3 }, { col: 70, height: 4 }],
+    bricks: [
+      { col: 12, row: 10 }, { col: 13, row: 10 },
+      { col: 23, row: 9 }, { col: 24, row: 9 },
+      { col: 34, row: 8 }, { col: 35, row: 8 }, { col: 36, row: 8 },
+      { col: 50, row: 9 }, { col: 51, row: 9 },
+      { col: 62, row: 8 }, { col: 63, row: 8 },
+      { col: 76, row: 10 }, { col: 77, row: 10 }
+    ],
+    qBlocks: [
+      { col: 13, row: 7, contents: 'mushroom' },
+      { col: 35, row: 5, contents: 'coin' },
+      { col: 51, row: 6, contents: 'coin' },
+      { col: 88, row: 11, contents: 'coin' }
+    ],
+    coins: [
+      { col: 12, row: 8 }, { col: 23, row: 7 }, { col: 35, row: 6 },
+      { col: 50, row: 7 }, { col: 62, row: 6 }, { col: 76, row: 8 },
+      { col: 85, row: 13 }, { col: 92, row: 13 }
+    ],
+    goombas: [8, 18, 28, 44, 58, 70, 85, 92],
+    koopas: [20, 46, 68, 88],
+    fireFlowers: [{ col: 5, row: 14 }],
+    flagCol: 97,
+    playerStart: { col: 2, row: 14 }
+  },
+
+  // 15 — Wario's Castle: the final showdown.
+  {
+    name: "2-4 Wario's Castle",
+    groundSpans: [
+      { start: 0, end: 18 },
+      { start: 22, end: 34 },
+      { start: 38, end: 54 },
+      { start: 58, end: 72 },
+      { start: 76, end: W }
+    ],
+    pipes: [{ col: 30, height: 3 }, { col: 64, height: 3 }],
+    bricks: [
+      { col: 14, row: 10 }, { col: 15, row: 10 },
+      { col: 44, row: 9 }, { col: 45, row: 9 }, { col: 46, row: 9 },
+      { col: 68, row: 10 }, { col: 69, row: 10 },
+      // raised ledges in the boss arena
+      { col: 82, row: 11 }, { col: 83, row: 11 },
+      { col: 92, row: 11 }, { col: 93, row: 11 }
+    ],
+    qBlocks: [
+      { col: 15, row: 7, contents: 'mushroom' },
+      { col: 45, row: 6, contents: 'coin' },
+      { col: 50, row: 9, contents: 'coin' }
+    ],
+    coins: [
+      { col: 6, row: 13 }, { col: 12, row: 13 }, { col: 26, row: 13 },
+      { col: 42, row: 13 }, { col: 48, row: 13 }, { col: 62, row: 13 },
+      { col: 79, row: 13 }, { col: 88, row: 13 }
+    ],
+    goombas: [10, 26, 42, 50, 62, 70],
+    koopas: [16, 48, 66],
+    fireFlowers: [{ col: 5, row: 14 }, { col: 60, row: 14 }],
+    wario: { col: 90, hp: 22 },
+    flagCol: 98,
     playerStart: { col: 2, row: 14 }
   }
 ];

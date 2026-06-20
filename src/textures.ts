@@ -430,4 +430,137 @@ export function buildTextures(scene: Phaser.Scene): void {
     g.generateTexture('bowser', W, H);
     g.destroy();
   }
+
+  // --- Wario boss ---------------------------------------------------------
+  // Chunky pixel-art villain: yellow cap with a blue "W" emblem, big pink
+  // nose, brown zig-zag mustache, yellow shirt and purple overalls.
+  {
+    const W = 60;
+    const H = 80;
+    const g = scene.add.graphics();
+
+    // Drop shadow.
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(W / 2, H - 3, 44, 7);
+
+    // Legs / boots (purple overalls legs + green boots).
+    g.fillStyle(COLORS.warioOveralls, 1);
+    g.fillRect(14, 52, 12, 20);
+    g.fillRect(W - 26, 52, 12, 20);
+    g.fillStyle(0x1f7a36, 1);
+    g.fillRoundedRect(10, 68, 18, 10, 3);
+    g.fillRoundedRect(W - 28, 68, 18, 10, 3);
+
+    // Torso — yellow shirt.
+    g.fillStyle(COLORS.warioShirt, 1);
+    g.fillRoundedRect(10, 30, W - 20, 26, 6);
+    // Purple overalls bib over the shirt.
+    g.fillStyle(COLORS.warioOveralls, 1);
+    g.fillRect(18, 36, W - 36, 22);
+    // Overall straps.
+    g.fillRect(16, 30, 6, 12);
+    g.fillRect(W - 22, 30, 6, 12);
+    // Gold buttons.
+    g.fillStyle(0xffe066, 1);
+    g.fillCircle(20, 40, 2.5);
+    g.fillCircle(W - 20, 40, 2.5);
+
+    // Arms.
+    g.fillStyle(COLORS.warioShirt, 1);
+    g.fillRoundedRect(2, 32, 10, 20, 4);
+    g.fillRoundedRect(W - 12, 32, 10, 20, 4);
+    // White-gloved hands.
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(7, 52, 5);
+    g.fillCircle(W - 7, 52, 5);
+
+    // Head.
+    g.fillStyle(COLORS.warioSkin, 1);
+    g.fillRoundedRect(14, 8, W - 28, 24, 8);
+    // Cap (yellow with a wide brim).
+    g.fillStyle(COLORS.warioCap, 1);
+    g.fillRoundedRect(12, 2, W - 24, 12, 5);
+    g.fillRect(10, 12, W - 20, 5);
+    // Blue circle + white "W" emblem on the cap.
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(W / 2, 8, 6);
+    g.fillStyle(COLORS.warioEmblem, 1);
+    g.fillCircle(W / 2, 8, 5);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(W / 2 - 4, 5, 1.5, 6);
+    g.fillRect(W / 2 + 2.5, 5, 1.5, 6);
+    g.fillRect(W / 2 - 0.75, 5, 1.5, 6);
+
+    // Eyes.
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(20, 18, 6, 6);
+    g.fillRect(W - 26, 18, 6, 6);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(23, 19, 3, 4);
+    g.fillRect(W - 23, 19, 3, 4);
+    // Angry eyebrows.
+    g.fillStyle(0x3a2410, 1);
+    g.fillRect(19, 16, 8, 2);
+    g.fillRect(W - 27, 16, 8, 2);
+
+    // Big pink nose.
+    g.fillStyle(0xf2a07a, 1);
+    g.fillRoundedRect(W / 2 - 6, 22, 12, 9, 4);
+
+    // Zig-zag mustache under the nose.
+    g.fillStyle(COLORS.warioMustache, 1);
+    g.fillTriangle(W / 2 - 12, 31, W / 2 - 4, 31, W / 2 - 8, 37);
+    g.fillTriangle(W / 2 - 4, 31, W / 2 + 4, 31, W / 2, 37);
+    g.fillTriangle(W / 2 + 4, 31, W / 2 + 12, 31, W / 2 + 8, 37);
+
+    g.generateTexture('wario', W, H);
+    g.destroy();
+  }
+
+  // --- Wario throwing knife ----------------------------------------------
+  {
+    const w = 22;
+    const h = 8;
+    const g = scene.add.graphics();
+    // Brown handle.
+    g.fillStyle(COLORS.knifeHandle, 1);
+    g.fillRect(0, h / 2 - 2, 7, 4);
+    // Steel blade (pointed triangle).
+    g.fillStyle(COLORS.knife, 1);
+    g.fillTriangle(7, 0, w, h / 2, 7, h);
+    g.lineStyle(1, 0x9aa3b0, 1);
+    g.strokeTriangle(7, 0, w, h / 2, 7, h);
+    g.generateTexture('knife', w, h);
+    g.destroy();
+  }
+
+  // --- Wario bomb / grenade ----------------------------------------------
+  {
+    const s = 20;
+    const g = scene.add.graphics();
+    g.fillStyle(0x000000, 0.3);
+    g.fillCircle(s / 2, s / 2 + 1, s / 2 - 1);
+    g.fillStyle(COLORS.bomb, 1);
+    g.fillCircle(s / 2, s / 2, s / 2 - 2);
+    // Highlight.
+    g.fillStyle(0x555555, 1);
+    g.fillCircle(s / 2 - 2, s / 2 - 2, 2);
+    // Fuse cap + spark.
+    g.fillStyle(0x5a5a5a, 1);
+    g.fillRect(s / 2 - 2, 1, 4, 4);
+    g.fillStyle(COLORS.bombFuse, 1);
+    g.fillCircle(s / 2 + 2, 1, 2);
+    g.generateTexture('bomb', s, s);
+    g.destroy();
+  }
+
+  // --- Lasso loop (visual only) ------------------------------------------
+  {
+    const s = 28;
+    const g = scene.add.graphics();
+    g.lineStyle(3, COLORS.lasso, 1);
+    g.strokeEllipse(s / 2, s / 2, s - 6, s - 12);
+    g.generateTexture('lasso-loop', s, s);
+    g.destroy();
+  }
 }

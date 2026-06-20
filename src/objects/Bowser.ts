@@ -22,12 +22,14 @@ export class Bowser extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     bigFireballs: Phaser.Physics.Arcade.Group,
-    onShockwave: (x: number, y: number) => void
+    onShockwave: (x: number, y: number) => void,
+    hp: number = BOSS.hp
   ) {
     super(scene, x, y, 'bowser');
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.homeX = x;
+    this.hp = hp;
     this.bigFireballs = bigFireballs;
     this.onShockwave = onShockwave;
 

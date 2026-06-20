@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TILE, WORLD_WIDTH, WORLD_HEIGHT, ARMOR, BOSS } from '../constants';
+import { TILE, WORLD_WIDTH, WORLD_HEIGHT, ARMOR, BOSS, WARIO, COLORS } from '../constants';
 import { buildTextures } from '../textures';
 import { LEVELS, LevelData } from '../levels';
 import { tileCenter } from '../utils';
@@ -13,6 +13,9 @@ import { FireFlower } from '../objects/FireFlower';
 import { Fireball } from '../objects/Fireball';
 import { BigFireball } from '../objects/BigFireball';
 import { Bowser } from '../objects/Bowser';
+import { Wario } from '../objects/Wario';
+import { ThrowingKnife } from '../objects/ThrowingKnife';
+import { Bomb } from '../objects/Bomb';
 
 interface SolidData {
   type: 'ground' | 'brick' | 'pipe' | 'q' | 'used';
@@ -33,13 +36,16 @@ export class PlayScene extends Phaser.Scene {
   private fireFlowers!: Phaser.Physics.Arcade.StaticGroup;
   private fireballs!: Phaser.Physics.Arcade.Group;
   private bigFireballs!: Phaser.Physics.Arcade.Group;
+  private warioProjectiles!: Phaser.Physics.Arcade.Group;
   private flag!: Flag;
   private bowser?: Bowser;
+  private wario?: Wario;
   private onPole = false;
 
   private score = 0;
   private lives = 3;
   private coinsCollected = 0;
+  private armorCoins = 0;
   private levelCleared = false;
   private levelIndex = 0;
   private level!: LevelData;
@@ -57,10 +63,12 @@ export class PlayScene extends Phaser.Scene {
     this.score = (this.registry.get('score') as number | undefined) ?? 0;
     this.lives = (this.registry.get('lives') as number | undefined) ?? 3;
     this.coinsCollected = (this.registry.get('coins') as number | undefined) ?? 0;
+    this.armorCoins = (this.registry.get('armorCoins') as number | undefined) ?? 0;
     const persistedSize =
       (this.registry.get(SIZE_KEY) as PlayerSize | undefined) ?? 'small';
     this.levelCleared = false;
     this.bowser = undefined;
+    this.wario = undefined;
     this.level = LEVELS[this.levelIndex];
 
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT + 600);
@@ -75,6 +83,7 @@ export class PlayScene extends Phaser.Scene {
     this.mushrooms = this.physics.add.group();
     this.fireballs = this.physics.add.group();
     this.bigFireballs = this.physics.add.group();
+    this.warioProjectiles = this.physics.add.group();
 
     this.buildLevel();
     this.spawnPlayer(persistedSize);
@@ -92,6 +101,9 @@ export class PlayScene extends Phaser.Scene {
     // Announce boss approach on level 3 (index 2).
     if (this.levelIndex === 2) {
       this.showToast('BOWSER APPROACHES!', 3200);
+    }
+    if (this.level.wario) {
+      this.showToast('WARIO IS HERE!  Use fireballs to beat him', 3600);
     }
   }
 
@@ -140,7 +152,19 @@ export class PlayScene extends Phaser.Scene {
     if (this.level.bowser) {
       const p = tileCenter(this.level.bowser.col, 13);
       this.bowser = new Bowser(this, p.x, p.y, this.bigFireballs, (sx, sy) =>
-        this.triggerShockwave(sx, sy)
+        this.triggerShockwave(sx, sy), this.level.bowser.hp
+      );
+    }
+    if (this.level.wario) {
+      const p = tileCenter(this.level.wario.col, 13);
+      this.wario = new Wario(
+        this,
+        p.x,
+        p.y,
+        this.warioProjectiles,
+        (sx, sy) => this.triggerShockwave(sx, sy),
+        () => this.triggerLasso(),
+        this.level.wario.hp
       );
     }
 
@@ -166,7 +190,7 @@ export class PlayScene extends Phaser.Scene {
     this.player = new Player(this, p.x, p.y);
     if (persistedSize === 'big') this.player.powerUp('mushroom');
     if (persistedSize === 'fire') this.player.powerUp('fire');
-    if (this.coinsCollected >= ARMOR.coinThreshold) this.player.grantArmor();
+    if (this.armorCoins >= ARMOR.coinThreshold) this.player.grantArmor();
     this.player.onShootFireball = (x, y, dir) => this.shootFireball(x, y, dir);
   }
 
@@ -184,7 +208,9 @@ export class PlayScene extends Phaser.Scene {
     this.physics.add.collider(this.mushrooms, this.solids);
     this.physics.add.collider(this.fireballs, this.solids);
     this.physics.add.collider(this.bigFireballs, this.solids);
+    this.physics.add.collider(this.warioProjectiles, this.solids);
     if (this.bowser) this.physics.add.collider(this.bowser, this.solids);
+    if (this.wario) this.physics.add.collider(this.wario, this.solids);
 
     this.physics.add.collider(this.goombas, this.koopas, (g, k) => {
       const koopa = k as Koopa;
@@ -211,7 +237,12 @@ export class PlayScene extends Phaser.Scene {
       (coin as Coin).destroy();
       this.coinsCollected += 1;
       this.addScore(50);
-      if (this.coinsCollected >= ARMOR.coinThreshold) this.player.grantArmor();
+      // Coins only count toward armor while you don't already have it; losing
+      // armor resets this progress so you must collect another full set.
+      if (!this.player.armor) {
+        this.armorCoins += 1;
+        if (this.armorCoins >= ARMOR.coinThreshold) this.player.grantArmor();
+      }
     });
     this.physics.add.overlap(this.player, this.mushrooms, (_p, m) => {
       (m as Mushroom).destroy();
@@ -283,6 +314,53 @@ export class PlayScene extends Phaser.Scene {
       });
     }
 
+    // Fireball vs Wario + stomp + projectile contact.
+    if (this.wario) {
+      this.physics.add.overlap(
+        this.wario,
+        this.fireballs,
+        (_warioObj, fbObj) => {
+          const fb = fbObj as Fireball;
+          fb.destroy();
+          if (this.wario!.hit()) {
+            this.addScore(8000);
+            this.completeLevel();
+          } else {
+            this.addScore(100);
+            this.pushHud();
+          }
+        },
+        (_warioObj, fbObj) => (fbObj as Fireball).active && !!this.wario && this.wario.alive
+      );
+      this.physics.add.overlap(this.player, this.wario, (_p, wObj) => {
+        const w = wObj as Wario;
+        if (!w.alive || !this.player.alive) return;
+        const pBody = this.player.body as Phaser.Physics.Arcade.Body;
+        if (pBody.velocity.y > 0 && this.player.y < w.y - 16) {
+          this.player.bounce();
+          if (w.hit()) {
+            this.addScore(8000);
+            this.completeLevel();
+          } else {
+            this.pushHud();
+          }
+        } else {
+          this.damagePlayer();
+        }
+      });
+    }
+
+    // Wario's knives + bombs hurt the player.
+    this.physics.add.overlap(this.player, this.warioProjectiles, (_p, projObj) => {
+      if (!this.player.alive) return;
+      if (projObj instanceof Bomb) {
+        (projObj as Bomb).explode();
+      } else {
+        (projObj as ThrowingKnife).destroy();
+        this.damagePlayer();
+      }
+    });
+
     // BigFireballs hurt the player.
     this.physics.add.overlap(this.player, this.bigFireballs, (_p, bfb) => {
       (bfb as BigFireball).destroy();
@@ -294,7 +372,7 @@ export class PlayScene extends Phaser.Scene {
 
   private startPoleSequence(): void {
     if (this.levelCleared) return;
-    if (this.bowser && this.bowser.alive) return;
+    if (this.bossAlive()) return;
     if (this.onPole) return;
     this.onPole = true;
 
@@ -431,9 +509,55 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private damagePlayer(): void {
+    const hadArmor = this.player.armor;
     const died = this.player.takeDamage(this.time.now);
+    // Losing armor resets the progress toward the next armor.
+    if (hadArmor && !this.player.armor) {
+      this.armorCoins = 0;
+      this.registry.set('armorCoins', 0);
+    }
     this.pushHud();
     if (died) this.handlePlayerDeath();
+  }
+
+  private bossAlive(): boolean {
+    return (!!this.bowser && this.bowser.alive) || (!!this.wario && this.wario.alive);
+  }
+
+  /** Wario's lasso: if the player is within reach, reel them in and damage. */
+  private triggerLasso(): void {
+    if (!this.player.alive || !this.wario || !this.wario.alive) return;
+    if (Math.abs(this.player.x - this.wario.x) > WARIO.lassoRange) return;
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.enable = false; // freeze physics so the pull isn't fought by movement
+
+    const rope = this.add.graphics().setDepth(50);
+    const loop = this.add.image(this.player.x, this.player.y, 'lasso-loop').setDepth(51);
+    const targetX = this.wario.x + (this.player.x < this.wario.x ? -40 : 40);
+    const draw = () => {
+      if (!this.wario) return;
+      rope.clear();
+      rope.lineStyle(3, COLORS.lasso, 1);
+      rope.lineBetween(this.wario.x, this.wario.y - 10, this.player.x, this.player.y);
+      loop.setPosition(this.player.x, this.player.y);
+    };
+    draw();
+    this.tweens.add({
+      targets: this.player,
+      x: targetX,
+      y: this.wario.y,
+      duration: WARIO.lassoPullMs,
+      ease: 'Quad.In',
+      onUpdate: draw,
+      onComplete: () => {
+        rope.destroy();
+        loop.destroy();
+        body.enable = true;
+        body.reset(this.player.x, this.player.y);
+        this.damagePlayer();
+      }
+    });
   }
 
   private pushHud(): void {
@@ -444,7 +568,11 @@ export class PlayScene extends Phaser.Scene {
       level: this.level.name,
       armor: this.player ? this.player.armor : false,
       power: this.player ? this.playerPower() : 'small',
-      bossHp: this.bowser?.alive ? this.bowser.hp : undefined
+      bossHp: this.bowser?.alive
+        ? this.bowser.hp
+        : this.wario?.alive
+        ? this.wario.hp
+        : undefined
     });
   }
 
@@ -472,6 +600,7 @@ export class PlayScene extends Phaser.Scene {
         this.registry.set('score', this.score);
         this.registry.set('lives', this.lives);
         this.registry.set('coins', this.coinsCollected);
+        this.registry.set('armorCoins', this.armorCoins);
         // Lose one power level on death (small → restart, big/fire → big).
         // Persisting fire across death would be too forgiving; persist big.
         const downSize: PlayerSize = this.playerPower() === 'fire' ? 'big' : 'small';
@@ -483,8 +612,8 @@ export class PlayScene extends Phaser.Scene {
 
   private completeLevel(): void {
     if (this.levelCleared) return;
-    // If a boss is in this level, you can ONLY clear it by killing Bowser.
-    if (this.bowser && this.bowser.alive) return;
+    // If a boss is in this level, you can ONLY clear it by killing the boss.
+    if (this.bossAlive()) return;
     this.levelCleared = true;
     this.addScore(2000);
 
@@ -499,6 +628,7 @@ export class PlayScene extends Phaser.Scene {
         this.registry.set('score', this.score);
         this.registry.set('lives', this.lives);
         this.registry.set('coins', this.coinsCollected);
+        this.registry.set('armorCoins', this.armorCoins);
         this.registry.set(SIZE_KEY, this.playerPower());
         this.scene.restart();
       }
@@ -509,6 +639,7 @@ export class PlayScene extends Phaser.Scene {
     this.registry.set('score', 0);
     this.registry.set('lives', 3);
     this.registry.set('coins', 0);
+    this.registry.set('armorCoins', 0);
     this.registry.set(LEVEL_KEY, 0);
     this.registry.set(SIZE_KEY, 'small');
   }
@@ -572,8 +703,17 @@ export class PlayScene extends Phaser.Scene {
       if (c && (c as BigFireball).active) (c as BigFireball).tick();
       return true;
     });
+    this.warioProjectiles.children.iterate((c) => {
+      if (!c || !(c as Phaser.Physics.Arcade.Sprite).active) return true;
+      if (c instanceof Bomb) (c as Bomb).tick();
+      else (c as ThrowingKnife).tick(time);
+      return true;
+    });
     if (this.bowser && this.bowser.alive) {
       this.bowser.tick(time, this.player.x, this.player.y);
+    }
+    if (this.wario && this.wario.alive) {
+      this.wario.tick(time, this.player.x, this.player.y);
     }
   }
 }
