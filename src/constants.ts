@@ -127,5 +127,7 @@ export const COLORS = {
   knifeHandle: 0x5a3a1a,
   bomb: 0x1b1b1b,
   bombFuse: 0xffb347,
-  lasso: 0xb9762f
+  lasso: 0xb9762f,
+  bgHill: 0x3f9a52,
+  cloud: 0xffffff
 } as const;

@@ -74,6 +74,7 @@ export class PlayScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT + 600);
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.setBackgroundColor('#5c94fc');
+    this.buildBackground();
 
     this.solids = this.physics.add.staticGroup();
     this.coins = this.physics.add.staticGroup();
@@ -104,6 +105,58 @@ export class PlayScene extends Phaser.Scene {
     }
     if (this.level.wario) {
       this.showToast('WARIO IS HERE!  Use fireballs to beat him', 3600);
+    }
+  }
+
+  /** Scatters decorative, non-colliding clouds/hills/bushes/grass behind the level. */
+  private buildBackground(): void {
+    const groundY = 15 * TILE; // top of the ground tiles
+
+    // True if every sampled x position (in pixels) has ground beneath it —
+    // used to keep ground-hugging scenery from floating over pits.
+    const isGrounded = (x: number, halfWidth: number): boolean => {
+      const cols = [x - halfWidth, x, x + halfWidth].map((px) => Math.floor(px / TILE));
+      return cols.every((col) => this.level.groundSpans.some((s) => col >= s.start && col <= s.end));
+    };
+
+    // Clouds drift slowly in the distance, with randomized size/height/spacing.
+    for (let x = 100; x < WORLD_WIDTH; x += Phaser.Math.Between(320, 560)) {
+      const y = Phaser.Math.Between(40, 140);
+      const scale = Phaser.Math.FloatBetween(0.45, 0.8);
+      this.add.image(x, y, 'bg-cloud').setScale(scale).setScrollFactor(0.3).setDepth(-40);
+    }
+
+    // Rolling hills sit on the horizon, behind the bushes — also skipped
+    // wherever they'd overhang a pit.
+    for (let x = 60; x < WORLD_WIDTH; x += Phaser.Math.Between(260, 380)) {
+      if (!isGrounded(x, 90)) continue;
+      this.add.image(x, groundY, 'bg-hill').setOrigin(0.5, 1).setScrollFactor(1).setDepth(-30);
+    }
+
+    // Bushes hug the ground line just in front of the hills — smaller, more
+    // randomly spaced/sized, and skipped wherever they'd overhang a pit.
+    for (let x = 40; x < WORLD_WIDTH; x += Phaser.Math.Between(280, 460)) {
+      const scale = Phaser.Math.FloatBetween(0.5, 0.8);
+      if (!isGrounded(x, (90 * scale) / 2)) continue;
+      this.add
+        .image(x, groundY, 'bg-bush')
+        .setOrigin(0.5, 1)
+        .setScale(scale)
+        .setScrollFactor(1)
+        .setDepth(-20);
+    }
+
+    // Small grass tufts are scattered more densely along the ground — also
+    // randomized in size and skipped over pits.
+    for (let x = 20; x < WORLD_WIDTH; x += Phaser.Math.Between(100, 200)) {
+      const scale = Phaser.Math.FloatBetween(0.6, 1);
+      if (!isGrounded(x, (40 * scale) / 2)) continue;
+      this.add
+        .image(x, groundY, 'bg-grass')
+        .setOrigin(0.5, 1)
+        .setScale(scale)
+        .setScrollFactor(1)
+        .setDepth(-20);
     }
   }
 

@@ -90,20 +90,76 @@ export function buildTextures(scene: Phaser.Scene): void {
   // Used (spent) block.
   rect('tile-used', TILE, TILE, COLORS.questionUsed, 0x000000);
 
+  // --- Background scenery (parallax, non-colliding) ------------------------
+
+  // Cloud: a cluster of overlapping puffs.
+  {
+    const w = 70;
+    const h = 40;
+    const g = scene.add.graphics();
+    g.fillStyle(COLORS.cloud, 1);
+    g.fillEllipse(30, 30, 40, 18);
+    g.fillEllipse(18, 24, 28, 22);
+    g.fillEllipse(38, 16, 32, 24);
+    g.fillEllipse(56, 24, 24, 20);
+    g.generateTexture('bg-cloud', w, h);
+    g.destroy();
+  }
+
+  // Hill: two overlapping bumps, flat-bottomed so it sits on the horizon.
+  {
+    const w = 180;
+    const h = 96;
+    const g = scene.add.graphics();
+    g.fillStyle(COLORS.bgHill, 1);
+    g.fillCircle(55, h, 66);
+    g.fillCircle(125, h, 50);
+    g.generateTexture('bg-hill', w, h);
+    g.destroy();
+  }
+
+  // Bush: classic three-lobed cluster, flat-bottomed.
+  {
+    const w = 90;
+    const h = 44;
+    const g = scene.add.graphics();
+    g.fillStyle(COLORS.groundTop, 1);
+    g.fillCircle(22, h, 26);
+    g.fillCircle(50, h - 6, 30);
+    g.fillCircle(76, h, 24);
+    g.generateTexture('bg-bush', w, h);
+    g.destroy();
+  }
+
+  // Grass tuft: a small two-lobed accent, scattered more densely than bushes.
+  {
+    const w = 40;
+    const h = 22;
+    const g = scene.add.graphics();
+    g.fillStyle(COLORS.groundTop, 1);
+    g.fillCircle(10, h, 13);
+    g.fillCircle(28, h, 15);
+    g.generateTexture('bg-grass', w, h);
+    g.destroy();
+  }
+
   // --- Entities ------------------------------------------------------------
 
   // Small player (16x24 hit, drawn 20x28).
+  // A cap-brim + single eye toward the right edge make the default (un-
+  // flipped) orientation read as "facing right"; Player.ts mirrors this
+  // texture with setFlipX() when moving left.
   {
     const w = 22;
     const h = 28;
     const g = scene.add.graphics();
     g.fillStyle(COLORS.player, 1);
     g.fillRect(0, 0, w, h);
+    g.fillTriangle(w - 9, 2, w - 1, 5, w - 9, 8); // cap brim
     g.fillStyle(0xffd9b0, 1); // face
     g.fillRect(4, 4, w - 8, 8);
     g.fillStyle(0x000000, 1);
-    g.fillRect(8, 6, 2, 3);
-    g.fillRect(w - 10, 6, 2, 3);
+    g.fillRect(w - 9, 6, 3, 4); // single eye toward the facing side
     g.generateTexture('player-small', w, h);
     g.destroy();
   }
@@ -115,11 +171,11 @@ export function buildTextures(scene: Phaser.Scene): void {
     const g = scene.add.graphics();
     g.fillStyle(COLORS.playerBig, 1);
     g.fillRect(0, 0, w, h);
+    g.fillTriangle(w - 9, 2, w - 1, 6, w - 9, 10); // cap brim
     g.fillStyle(0xffd9b0, 1);
     g.fillRect(4, 4, w - 8, 10);
     g.fillStyle(0x000000, 1);
-    g.fillRect(8, 7, 2, 3);
-    g.fillRect(w - 10, 7, 2, 3);
+    g.fillRect(w - 9, 7, 3, 4); // single eye toward the facing side
     g.generateTexture('player-big', w, h);
     g.destroy();
   }
@@ -241,11 +297,11 @@ export function buildTextures(scene: Phaser.Scene): void {
     g.fillRect(0, 0, w, h);
     g.fillStyle(0xff3030, 1);
     g.fillRect(0, 0, w, 14);
+    g.fillTriangle(w - 9, 2, w - 1, 6, w - 9, 10); // cap brim
     g.fillStyle(0xffd9b0, 1);
     g.fillRect(4, 4, w - 8, 10);
     g.fillStyle(0x000000, 1);
-    g.fillRect(8, 7, 2, 3);
-    g.fillRect(w - 10, 7, 2, 3);
+    g.fillRect(w - 9, 7, 3, 4); // single eye toward the facing side
     g.generateTexture('player-fire', w, h);
     g.destroy();
   }
